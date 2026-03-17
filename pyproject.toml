@@ -18,6 +18,7 @@ dependencies = [
     "joblib>=1.0.0",
     "werkzeug>=2.0.0",
     "eventlet>=0.39.1",
+    "gunicorn>=23.0.0",
 ]
 
 [tool.uv]
