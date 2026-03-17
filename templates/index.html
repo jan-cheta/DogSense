@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog Behavior Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .video-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .video-container {
+            display: block;
+            max-width: 100%;
+            background: #000;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin: 0 auto;
+        }
+
+        .video-container img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .analyze-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: #219a52;
+        }
+
+        .analyze-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .status-section {
+            margin-top: 30px;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-processing {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .status-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .behavior-result {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .dominant-behavior {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .behavior-icon {
+            font-size: 3em;
+            margin-right: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        .behavior-content {
+            text-align: left;
+            flex: 1;
+        }
+
+        .behavior-title {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+
+        .behavior-label {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .confidence {
+            font-size: 1.1em;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .probabilities {
+            margin-top: 20px;
+        }
+
+        .probabilities h3 {
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        .probability-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .probability-bar {
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #3498db;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                margin: 5px;
+                min-height: calc(100vh - 10px);
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .content {
+                padding: 20px 15px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .upload-area {
+                padding: 30px 20px;
+            }
+
+            .upload-icon {
+                font-size: 2.5em;
+                margin-bottom: 15px;
+            }
+
+            .upload-text {
+                font-size: 1.1em;
+                margin-bottom: 8px;
+            }
+
+            .upload-hint {
+                font-size: 0.85em;
+            }
+
+            .analyze-btn {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+
+            .video-container {
+                padding: 5px;
+            }
+
+            .video-container img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+            }
+
+            .dominant-behavior {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px 15px;
+            }
+
+            .behavior-icon {
+                font-size: 2.5em;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .behavior-content {
+                text-align: center;
+            }
+
+            .behavior-label {
+                font-size: 1.8em;
+            }
+
+            .confidence {
+                font-size: 1em;
+            }
+
+            .probabilities h3 {
+                font-size: 1.1em;
+                margin-bottom: 12px;
+            }
+
+            .probability-item {
+                font-size: 0.9em;
+            }
+
+            .result-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .content {
+                padding: 15px 10px;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .content {
+                padding: 15px 10px;
+            }
+
+            .upload-area {
+                padding: 25px 15px;
+            }
+
+            .upload-icon {
+                font-size: 2em;
+                margin-bottom: 12px;
+            }
+
+            .upload-text {
+                font-size: 1em;
+            }
+
+            .upload-hint {
+                font-size: 0.8em;
+            }
+
+            .analyze-btn {
+                padding: 10px 20px;
+                font-size: 0.95em;
+            }
+
+            .dominant-behavior {
+                padding: 15px 10px;
+            }
+
+            .behavior-icon {
+                font-size: 2em;
+                margin-bottom: 10px;
+            }
+
+            .behavior-label {
+                font-size: 1.5em;
+            }
+
+            .confidence {
+                font-size: 0.95em;
+            }
+
+            .probabilities h3 {
+                font-size: 1em;
+            }
+
+            .result-card {
+                padding: 15px;
+            }
+
+            .status-message {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+
+            .video-container {
+                padding: 5px;
+            }
+
+            .video-container img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐕 Dog Behavior Analysis</h1>
+            <p>Upload a video to analyze dog behavior using AI</p>
+        </div>
+
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">Drop your video here or click to browse</div>
+                    <div class="upload-hint">Supported formats: MP4, AVI, MOV, MKV (max 500MB)</div>
+                    <input type="file" id="videoInput" accept="video/*">
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn" disabled>
+                    Start Analysis
+                </button>
+            </div>
+
+            <div class="video-section" id="videoSection" style="display: none;">
+                <div class="video-container">
+                    <img id="videoDisplay" alt="Video Analysis" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="status-section">
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="result-card">
+                    <div class="behavior-result">
+                        <div class="dominant-behavior">
+                            <div class="behavior-icon">🐕</div>
+                            <div class="behavior-content">
+                                <div class="behavior-title">Dominant Behavior Detected</div>
+                                <div class="behavior-label" id="behaviorLabel"></div>
+                                <div class="confidence" id="confidence"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="probabilities">
+                        <h3>All Behavior Probabilities</h3>
+                        <div id="probabilitiesList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let currentVideoPath = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const videoInput = document.getElementById('videoInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const videoSection = document.getElementById('videoSection');
+        const videoDisplay = document.getElementById('videoDisplay');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const statusMessage = document.getElementById('statusMessage');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // Initialize Socket.IO
+        function initSocket() {
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+
+            socket.on('analysis_started', (data) => {
+                console.log('Analysis started with task ID:', data.task_id);
+            });
+
+            socket.on('frame', (data) => {
+                videoDisplay.src = data.image;
+                if (videoSection.style.display === 'none') {
+                    videoSection.style.display = 'block';
+                }
+                
+                // Update progress based on frame processing
+                if (data.frame_number) {
+                    const progress = Math.min(90, (data.frame_number / 100) * 90); // Estimate progress
+                    progressBar.style.width = `${progress}%`;
+                }
+            });
+
+            socket.on('status', (data) => {
+                showStatus(data.message, 'processing');
+                if (data.progress !== undefined) {
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = `${data.progress}%`;
+                }
+            });
+
+            socket.on('complete', (data) => {
+                showResults(data);
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 1000);
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Start New Analysis';
+                showStatus('Analysis completed successfully!', 'success');
+            });
+
+            socket.on('error', (data) => {
+                showStatus(`Error: ${data.message}`, 'error');
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Start New Analysis';
+                progressContainer.style.display = 'none';
+                videoSection.style.display = 'none';
+            });
+        }
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('click', () => videoInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                videoInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        videoInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            if (videoInput.files.length > 0) {
+                const file = videoInput.files[0];
+                const fileName = file.name;
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <div class="upload-text">${fileName}</div>
+                    <div class="upload-hint">${fileSize} MB</div>
+                `;
+
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Start Analysis';
+            }
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (!videoInput.files.length) return;
+
+            // Clear previous results
+            clearResults();
+
+            const formData = new FormData();
+            formData.append('video', videoInput.files[0]);
+
+            try {
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = '<span class="loading"></span>Uploading...';
+
+                showStatus('Uploading video...', 'processing');
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus('Video uploaded. Starting live analysis...', 'processing');
+                    analyzeBtn.textContent = 'Analyzing...';
+                    progressContainer.style.display = 'block';
+
+                    // Start WebSocket analysis
+                    socket.emit('start_analysis', { video_path: `uploads/${result.task_id}.mp4` });
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Start New Analysis';
+            }
+        });
+
+        function clearResults() {
+            // Hide results section
+            resultsSection.style.display = 'none';
+            
+            // Clear video display
+            videoDisplay.src = '';
+            videoSection.style.display = 'none';
+            
+            // Reset progress bar
+            progressBar.style.width = '0%';
+            progressContainer.style.display = 'none';
+            
+            // Clear status
+            statusMessage.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function showResults(result) {
+            // Update dominant behavior
+            document.getElementById('behaviorLabel').textContent = result.class || result.behavior;
+            document.getElementById('confidence').textContent = `Confidence: ${(result.confidence * 100).toFixed(1)}%`;
+
+            const probabilitiesList = document.getElementById('probabilitiesList');
+            probabilitiesList.innerHTML = '';
+
+            // Sort probabilities by value descending
+            const sortedProbs = Object.entries(result.probabilities || {})
+                .sort(([,a], [,b]) => b - a);
+
+            sortedProbs.forEach(([behavior, prob]) => {
+                const item = document.createElement('div');
+                item.className = 'probability-item';
+
+                const percentage = (prob * 100).toFixed(1);
+                item.innerHTML = `
+                    <span>${behavior}</span>
+                    <span>${percentage}%</span>
+                    <div class="probability-bar">
+                        <div class="probability-fill" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+
+                probabilitiesList.appendChild(item);
+            });
+
+            resultsSection.style.display = 'block';
+        }
+
+        // Initialize socket connection when page loads
+        document.addEventListener('DOMContentLoaded', initSocket);
+    </script>
+    </script>
+</body>
+</html>
